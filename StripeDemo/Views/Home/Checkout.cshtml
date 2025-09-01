@@ -1,0 +1,209 @@
+﻿<section class="shopping-cart dark">
+	<div class="container">
+		<div class="block-heading">
+			<h2>Order summary</h2>
+			<p>Below is a summary of your order.</p>
+		</div>
+		<div class="content">
+			<div class="row">
+				<div class="col-md-12 col-lg-8">
+					<div class="items">
+						<div class="product">
+							<div class="row">
+								<div class="col-md-3">
+									<img class="img-fluid mx-auto d-block image" style="max-width: 90%" src="/img/prod1.png">
+								</div>
+								<div class="col-md-8">
+									<div class="info">
+										<div class="row">
+											<div class="col-md-5 product-name">
+												<div class="product-name">
+													<a href="#">Sports t-shirt</a>
+													<div class="product-info">
+														<div>Size: <span class="value">Large</span></div>
+														<div>Color: <span class="value">Red</span></div>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-4 quantity">
+												<label for="prod1">Quantity:</label>
+												<input id="prod1" type="number" value ="1" min="0" max="3" class="form-control quantity-input">
+											</div>
+											<div class="col-md-3 price">
+												<span>25 EUR</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="product">
+							<div class="row">
+								<div class="col-md-3">
+									<img class="img-fluid mx-auto d-block image" style="max-width: 90%" src="/img/prod2.png">
+								</div>
+								<div class="col-md-8">
+									<div class="info">
+										<div class="row">
+											<div class="col-md-5 product-name">
+												<div class="product-name">
+													<a href="#">Kettle bell</a>
+													<div class="product-info">
+														<div>Weight: <span class="value">10kg</span></div>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-4 quantity">
+												<label for="prod2">Quantity:</label>
+												<input id="prod2" type="number" value ="0" min="0" max="3" class="form-control quantity-input">
+											</div>
+											<div class="col-md-3 price">
+												<span>50 EUR</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="product">
+							<div class="row">
+								<div class="col-md-3">
+									<img class="img-fluid mx-auto d-block image" style="max-width: 90%" src="/img/prod3.png">
+								</div>
+								<div class="col-md-8">
+									<div class="info">
+										<div class="row">
+											<div class="col-md-5 product-name">
+												<div class="product-name">
+													<a href="#">Running shoes</a>
+													<div class="product-info">
+														<div>Size: <span class="value">40</span></div>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-4 quantity">
+												<label for="prod3">Quantity:</label>
+												<input id="prod3" type="number" value ="0" min="0" max="3" class="form-control quantity-input">
+											</div>
+											<div class="col-md-3 price">
+												<span>75 EUR</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-12 col-lg-4">
+					<div class="summary">
+						<h3>Summary</h3>
+						<div class="summary-item mb-3"><span class="text">Total</span><span class="price"><span id="total">0</span> EUR</span></div>
+						<div class="mb-2">
+							<select id="customer" class="form-select">
+								<option value="anonymous">Anonymous</option>
+								<option value="customer">Customer can be saved</option>
+							</select>
+						</div>
+						<div id="personalInfo">
+							<div class="row mb-2">
+								<div class="col-4">Your name</div>
+								<div class="col-8"><input type="text" id="name" maxlength="50" class="form-control" /></div>
+							</div>
+							<div class="row mb-2">
+								<div class="col-4">Email</div>
+								<div class="col-8"><input type="text" id="email" maxlength="50" class="form-control" /></div>
+							</div>
+						</div>
+						<button type="button" id="payBtn" class="btn btn-primary btn-lg btn-block">Pay with Stripe</button>
+						<img src="/img/spinner.gif" id="spinner" class="img-fluid" style="max-width: 50px; display:none;" />
+					</div>
+				</div>
+			</div> 
+		</div>
+	</div>
+</section>
+@section Styles
+{
+	<link rel="stylesheet" href="~/css/web.css" asp-append-version="true"/>
+}
+@section Scripts {
+	<script>
+		function calculateTotal() {
+			let prod1 = parseInt($('#prod1').val()) || 0;
+			let prod2 = parseInt($('#prod2').val()) || 0;
+			let prod3 = parseInt($('#prod3').val()) || 0;
+			let total = (prod1 * 25) + (prod2 * 50) + (prod3 * 75);
+			$('#total').text(total);
+		}
+		
+		$(document).ready(function () {
+			$('#customer').on('change', function () {
+				if (this.value === 'customer') {
+					$('#personalInfo').show();
+				} else {
+					$('#personalInfo').hide();
+				}
+			});
+			$('#customer').trigger('change');
+			
+			$('.quantity-input').on('change', function () {
+				calculateTotal();
+			});
+			calculateTotal();
+			
+			$('#payBtn').on('click', function () {
+				$('#payBtn').hide();
+				$('#spinner').show();
+				
+				let prod1 = parseInt($('#prod1').val());
+				let prod2 = parseInt($('#prod2').val());
+				let prod3 = parseInt($('#prod3').val());
+				if (prod1 === 0 && prod2 === 0 && prod3 === 0) {
+					alert('Please select at least one product.');
+					$('#payBtn').show();
+					$('#spinner').hide();
+				}
+				
+				if ($('#customer').val() === 'customer') {
+					let name = $('#name').val();
+					let email = $('#email').val();
+					if (!name || !email) {
+						alert('Please provide your name and email.');
+						$('#payBtn').show();
+						$('#spinner').hide();
+						return;
+					}
+
+					$.post({
+						url: '@Url.Action("Pay")',
+						contentType: "application/json",
+						data: JSON.stringify({ Name: name, Email: email, Prod1: prod1, Prod2: prod2, Prod3: prod3 }),
+						success: function(response) {
+							window.location.href = response.url;
+						},
+						error: function() {
+							alert('An error occurred. Please try again.');
+							$('#payBtn').show();
+							$('#spinner').hide();
+						}
+					});
+				} else {
+					$.post({
+						url: '@Url.Action("Pay")',
+						contentType: "application/json",
+						data: JSON.stringify({ Prod1: prod1, Prod2: prod2, Prod3: prod3 }),
+						success: function(response) {
+							window.location.href = response.url;
+						},
+						error: function() {
+							alert('An error occurred. Please try again.');
+							$('#payBtn').show();
+							$('#spinner').hide();
+						}
+					});
+				}
+			});
+		});
+	</script>
+}

@@ -1,0 +1,87 @@
+﻿<section class="payment-form dark">
+  <div class="container">
+    <div class="block-heading">
+      <h2>Order summary</h2>
+      <p>Below is a summary of your order.</p>
+    </div>
+    <form>
+      <div class="products" id="products">
+        <h3 class="title">Checkout</h3>
+        <div class="item">
+          <span class="price">25 EUR</span>
+          <input id="prod1" type="number" value="1" min="0" max="3" class="quantity-input me-2" onchange="calculateTotal()" style="display: block;float: left;">
+          <p class="item-name">Sports t-shirt</p>
+          <p class="item-description">Red, Large</p>
+        </div>
+        <div class="item">
+          <span class="price">50 EUR</span>
+          <input id="prod2" type="number" value="0" min="0" max="3" class="quantity-input me-2" onchange="calculateTotal()" style="display: block;float: left;">
+          <p class="item-name">Kettle bell</p>
+          <p class="item-description">10 kg</p>
+        </div>
+        <div class="item">
+          <span class="price">75 EUR</span>
+          <input id="prod3" type="number" value="0" min="0" max="3" class="quantity-input me-2" onchange="calculateTotal()" style="display: block;float: left;">
+          <p class="item-name">Running shoes</p>
+          <p class="item-description">Size 40</p>
+        </div>
+        <div class="total">Total <span id="total">25</span> EUR</div>
+      </div>
+      <div id="loading" class="m-3" style="display: none;">Loading payment form...</div>
+      <div id="checkout" class="m-3"></div>
+      <button type="button" onclick="generatePaymentForm()" id="payBtn" class="btn btn-primary btn-lg btn-block mb-2 ms-3">Proceed to payment</button>
+    </form>
+  </div>
+</section>
+@section Styles
+{
+  <link rel="stylesheet" href="~/css/mob.css" asp-append-version="true"/>
+}
+@section Scripts {
+  <script src="https://js.stripe.com/basil/stripe.js"></script>
+  <script defer>
+    const stripe = Stripe("pk_test_51S1MP2RzsDM5cDYaZ0J0MoeJHYyrxA5XV6zSko5igFjfu7E2KWNFYobOidMrDVt8Zqwic8LgPO9EL2o5aFBD8WmY00J7ZY4pQY");
+
+    function calculateTotal() {
+      let prod1 = parseInt($('#prod1').val()) || 0;
+      let prod2 = parseInt($('#prod2').val()) || 0;
+      let prod3 = parseInt($('#prod3').val()) || 0;
+      let total = (prod1 * 25) + (prod2 * 50) + (prod3 * 75);
+      $('#total').text(total);
+    }
+    
+    async function generatePaymentForm(){
+
+      let prod1 = parseInt($('#prod1').val());
+      let prod2 = parseInt($('#prod2').val());
+      let prod3 = parseInt($('#prod3').val());
+      if (prod1 === 0 && prod2 === 0 && prod3 === 0) {
+        alert('Please select at least one product.');
+        return;
+      }
+
+      $('#products').hide();
+      $('#payBtn').hide();
+      $('#loading').show();
+      
+      const promise = fetch("@Url.Action("Pay2")", {
+        method: "POST",
+        body: JSON.stringify({ Prod1: prod1, Prod2: prod2, Prod3: prod3 }),
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((r) => r.json())
+        .then((r) => r.clientSecret);
+      
+      const checkout = await stripe.initEmbeddedCheckout({
+        fetchClientSecret: () => promise
+      });
+
+      checkout.mount('#checkout');
+
+      setTimeout(function(){
+        $('#loading').hide();
+      }, 3000);
+
+    }
+  </script>
+}
