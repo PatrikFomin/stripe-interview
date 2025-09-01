@@ -9,6 +9,8 @@ namespace StripeDemo.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    
+    const string stripeApiKey = "";
 
     public HomeController(ILogger<HomeController> logger)
     {
@@ -90,7 +92,7 @@ public class HomeController : Controller
             });
         }
         
-        var client = new StripeClient(apiKey: "sk_test_51S1MP2RzsDM5cDYa1Tfk2T3D38VzgySeWCgdRp9jqOcbYevHRvhasZ5OjcMJokdldmxjZPsq3QbHGgL8S25zUPV500b6T79Bc2");
+        var client = new StripeClient(apiKey: stripeApiKey);
 
         if (data?.Email != null)
         {
@@ -199,7 +201,7 @@ public class HomeController : Controller
             });
         }
         
-        var client = new StripeClient(apiKey: "sk_test_51S1MP2RzsDM5cDYa1Tfk2T3D38VzgySeWCgdRp9jqOcbYevHRvhasZ5OjcMJokdldmxjZPsq3QbHGgL8S25zUPV500b6T79Bc2");
+        var client = new StripeClient(apiKey: stripeApiKey);
 
         var service = new SessionService(client);
         var session = service.Create(options);
@@ -248,7 +250,7 @@ public class HomeController : Controller
             ReturnUrl = domain + "/Home/Success?id={CHECKOUT_SESSION_ID}"
         };
         
-        var client = new StripeClient(apiKey: "sk_test_51S1MP2RzsDM5cDYa1Tfk2T3D38VzgySeWCgdRp9jqOcbYevHRvhasZ5OjcMJokdldmxjZPsq3QbHGgL8S25zUPV500b6T79Bc2");
+        var client = new StripeClient(apiKey: stripeApiKey);
 
         var service = new SessionService(client);
         var session = service.Create(options);
@@ -258,7 +260,7 @@ public class HomeController : Controller
     
     public async Task<IActionResult> Success(string id)
     {
-        var client = new StripeClient(apiKey: "sk_test_51S1MP2RzsDM5cDYa1Tfk2T3D38VzgySeWCgdRp9jqOcbYevHRvhasZ5OjcMJokdldmxjZPsq3QbHGgL8S25zUPV500b6T79Bc2");
+        var client = new StripeClient(apiKey: stripeApiKey);
         var service = new SessionService(client);
         var session = await service.GetAsync(id);
         return View(new Success { Status = session.PaymentStatus, Amount = (decimal)session.AmountTotal / 100 });
