@@ -8,14 +8,8 @@ namespace StripeDemo.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
-    
-    const string stripeApiKey = "";
-
-    public HomeController(ILogger<HomeController> logger)
-    {
-        _logger = logger;
-    }
+    const string stripeApiKey = "sk_test_51S1MP2RzsDM5cDYa1Tfk2T3D38VzgySeWCgdRp9jqOcbYevHRvhasZ5OjcMJokdldmxjZPsq3QbHGgL8S25zUPV500b6T79Bc2";
+    const string domain = "https://localhost:7293";
 
     public IActionResult Index()
     {
@@ -27,15 +21,15 @@ public class HomeController : Controller
         return View();
     }
     
-    public IActionResult Checkout2()
+    public IActionResult Checkout2([FromQuery]string locale = "en")
     {
+        ViewBag.Locale = locale;
         return View();
     }
 
     [HttpPost]
     public async Task<JsonResult> Pay([FromBody]PayData? data)
     {
-        var domain = "https://localhost:44328";
         var options = new SessionCreateOptions
         {
             LineItems = new List<SessionLineItemOptions>(),
@@ -132,20 +126,15 @@ public class HomeController : Controller
     }
     
     [HttpPost]
-    public JsonResult Pay2([FromBody]PayData? data)
+    public async Task<JsonResult> Pay2([FromBody]PayData? data)
     {
-        var domain = "https://localhost:44328";
         var options = new SessionCreateOptions
         {
             UiMode = "embedded",
             LineItems = new List<SessionLineItemOptions>(),
             Mode = "payment",
-            CustomerCreation = "always",
             ReturnUrl = domain + "/Home/Success?id={CHECKOUT_SESSION_ID}",
-            PaymentIntentData = new SessionPaymentIntentDataOptions
-            {
-                SetupFutureUsage = "off_session"
-            },
+            Locale = string.IsNullOrEmpty(data?.Locale) ? "auto" : data.Locale,
             SavedPaymentMethodOptions = new SessionSavedPaymentMethodOptionsOptions()
             {
                 PaymentMethodSave = "enabled"
@@ -202,9 +191,28 @@ public class HomeController : Controller
         }
         
         var client = new StripeClient(apiKey: stripeApiKey);
+        
+        var customerService = new CustomerService(client);
+        var customerSearch = await customerService.SearchAsync(new CustomerSearchOptions
+        {
+            Query = $"email:'{data.Email}'"
+        });
+        if (customerSearch.Data != null && customerSearch.Data.Count > 0)
+        {
+            options.Customer = customerSearch.Data[0].Id;
+        }
+        else
+        {
+            var customer = await customerService.CreateAsync(new CustomerCreateOptions
+            {
+                Name = data.Name,
+                Email = data.Email
+            });
+            options.Customer = customer.Id;
+        }
 
         var service = new SessionService(client);
-        var session = service.Create(options);
+        var session = await service.CreateAsync(options);
 
         return Json(new {clientSecret = session.ClientSecret});
     }
@@ -212,7 +220,6 @@ public class HomeController : Controller
     [HttpPost]
     public JsonResult Pay3()
     {
-        var domain = "https://localhost:44328";
         var options = new SessionCreateOptions
         {
             UiMode = "custom",
